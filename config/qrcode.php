@@ -1,0 +1,5 @@
+<?php
+
+return [
+    'writer' => 'png',
+];
