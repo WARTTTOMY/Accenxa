@@ -423,15 +423,6 @@ php artisan test --filter AlumnoTest
 
 ---
 
-## 🤝 Contribuciones
-
-¡Las contribuciones son bienvenidas! Si deseas mejorar este proyecto:
-
-1. 🍴 **Fork** el proyecto
-2. 🌿 Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. 💾 Commit tus cambios (`git commit -m 'Add: Amazing Feature'`)
-4. 📤 Push a la rama (`git push origin feature/AmazingFeature`)
-5. 🔃 Abre un **Pull Request**
 
 ### Convenciones de Commits
 
@@ -467,29 +458,6 @@ Si encuentras algún error, por favor:
 - 🎨 [Bootstrap 5 Docs](https://getbootstrap.com/docs/5.0/)
 - 📊 [DataTables Documentation](https://datatables.net/)
 
-<br>
-
----
-
-## 📜 Licencia
-
-Este proyecto está bajo la licencia **MIT License**.
-
-```
-MIT License
-
-Copyright (c) 2025 [Tu Nombre]
-
-Se concede permiso, de forma gratuita, a cualquier persona que obtenga una copia
-de este software y archivos de documentación asociados (el "Software"), para
-utilizar el Software sin restricciones, incluyendo sin limitación los derechos
-de usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y/o
-vender copias del Software...
-```
-
-Ver el archivo [LICENSE](LICENSE) para más detalles.
-
-<br>
 
 ---
 
@@ -498,9 +466,9 @@ Ver el archivo [LICENSE](LICENSE) para más detalles.
 <div align="center">
   <img src="https://avatars.githubusercontent.com/u/TU_USUARIO?v=4" width="100" style="border-radius: 50%;" alt="Foto de perfil"/>
   <br>
-  <strong>Tu Nombre</strong>
+  <strong>Tomas Arias Martinez</strong>
   <br>
-  <em>Full Stack Developer</em>
+  <em>Estudiante ingenieria en software</em>
   <br><br>
   
   [![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/TU_USUARIO)
