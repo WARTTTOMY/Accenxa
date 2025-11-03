@@ -21,21 +21,37 @@ class AlumnoController extends Controller
 
     public function store(Request $request)
     {
-        // Validación básica
+        // Validación con foto incluida
         $request->validate([
             'codigo' => 'required|unique:alumnos,codigo',
+            'documento_identidad' => 'nullable|string|max:50',
             'nombres' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'carrera' => 'nullable|string|max:255',
+            'semestre' => 'nullable|string|max:50',
+            'fecha_expiracion' => 'nullable|date',
         ]);
 
         $alumno = new Alumno();
         $alumno->codigo = $request->codigo;
+        $alumno->documento_identidad = $request->documento_identidad;
         $alumno->nombres = $request->nombres;
         $alumno->apellidos = $request->apellidos;
-        $alumno->save();
+        $alumno->carrera = $request->carrera;
+        $alumno->semestre = $request->semestre;
+        $alumno->estado = 'activo';
+        $alumno->fecha_expiracion = $request->fecha_expiracion;
         
-        // Ya no es necesario guardar el QR manualmente
-        // El accessor lo genera automáticamente
+        // Manejar la carga de la foto
+        if ($request->hasFile('foto')) {
+            $foto = $request->file('foto');
+            $nombreFoto = time() . '_' . $alumno->codigo . '.' . $foto->getClientOriginalExtension();
+            $ruta = $foto->storeAs('fotos_estudiantes', $nombreFoto, 'public');
+            $alumno->foto = $ruta;
+        }
+        
+        $alumno->save();
 
         $alumnos = Alumno::all();
 
