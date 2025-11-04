@@ -3,51 +3,125 @@
 @section('content')
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-lg-10">
             <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Historial de Asistencias</h4>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0 fw-bold text-primary">
+                            <i class="fas fa-history me-2"></i>Historial de Asistencias
+                        </h4>
+                        <p class="text-muted mb-0 mt-1">
+                            <i class="fas fa-user me-1"></i>{{ $alumno->full_name }}
+                        </p>
+                    </div>
+                    <a href="{{ route('alumno.perfil') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Volver al Perfil
+                    </a>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-striped">
+                        <table class="table mb-0">
                             <thead>
                                 <tr>
-                                    <th>Fecha</th>
-                                    <th>Hora</th>
-                                    <th>Tipo</th>
+                                    <th class="px-4">
+                                        <i class="fas fa-calendar-alt me-2"></i>Fecha
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-clock me-2"></i>Hora
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-sign-in-alt me-2"></i>Tipo
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-info-circle me-2"></i>Estado
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($asistencias as $asistencia)
                                     <tr>
-                                        <td>{{ $asistencia->created_at->format('d/m/Y') }}</td>
-                                        <td>{{ $asistencia->created_at->format('h:i A') }}</td>
+                                        <td class="px-4">
+                                            {{ $asistencia->created_at->format('d/m/Y') }}
+                                        </td>
                                         <td>
-                                            <span class="badge {{ $asistencia->tipo === 'entrada' ? 'bg-success' : 'bg-danger' }}">
+                                            <span class="fw-500">{{ $asistencia->created_at->format('h:i A') }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge {{ $asistencia->tipo === 'entrada' ? 'bg-success' : 'bg-danger' }} px-3">
+                                                <i class="fas {{ $asistencia->tipo === 'entrada' ? 'fa-sign-in-alt' : 'fa-sign-out-alt' }} me-1"></i>
                                                 {{ ucfirst($asistencia->tipo) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @php
+                                                $hora = (int)$asistencia->created_at->format('H');
+                                                $estado = '';
+                                                $estadoClass = '';
+                                                
+                                                if($asistencia->tipo === 'entrada') {
+                                                    if($hora <= 8) {
+                                                        $estado = 'A tiempo';
+                                                        $estadoClass = 'success';
+                                                    } elseif($hora <= 9) {
+                                                        $estado = 'Tardanza';
+                                                        $estadoClass = 'warning';
+                                                    } else {
+                                                        $estado = 'Muy tarde';
+                                                        $estadoClass = 'danger';
+                                                    }
+                                                } else {
+                                                    if($hora >= 17) {
+                                                        $estado = 'Completado';
+                                                        $estadoClass = 'success';
+                                                    } else {
+                                                        $estado = 'Salida temprana';
+                                                        $estadoClass = 'warning';
+                                                    }
+                                                }
+                                            @endphp
+                                            <span class="text-{{ $estadoClass }}">
+                                                <i class="fas fa-circle me-1" style="font-size: 8px;"></i>
+                                                {{ $estado }}
                                             </span>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="3" class="text-center">No hay registros de asistencia.</td>
+                                        <td colspan="4" class="text-center py-5">
+                                            <div class="text-muted">
+                                                <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                                                <p class="mb-0">No hay registros de asistencia disponibles.</p>
+                                            </div>
+                                        </td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
                     
-                    <div class="d-flex justify-content-center mt-4">
-                        {{ $asistencias->links() }}
-                    </div>
+                    @if($asistencias->hasPages())
+                        <div class="d-flex justify-content-center border-top p-4">
+                            {{ $asistencias->links() }}
+                        </div>
+                    @endif
                 </div>
             </div>
 
-            <div class="text-center mt-4">
-                <a href="{{ route('alumno.perfil') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Volver al Perfil
-                </a>
+            <!-- Resumen de Asistencias -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-1">Total de Asistencias</h5>
+                                    <h2 class="display-4 mb-0 fw-bold">{{ $asistencias->count() }}</h2>
+                                </div>
+                                <i class="fas fa-calendar-check fa-4x opacity-25"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -2,63 +2,103 @@
 
 @section('content')
 <div class="container py-4">
-    <div class="profile-container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Mi Perfil</h2>
-            <div>
-                <a href="{{ route('alumno.asistencias') }}" class="btn btn-info me-2">
-                    <i class="fas fa-clock"></i> Mis Asistencias
+    <div class="profile-container p-4">
+        <!-- Encabezado del Perfil -->
+        <div class="row align-items-center mb-5">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center">
+                    <div class="position-relative">
+                        <img src="{{ $alumno->foto_url }}" alt="Foto de perfil" class="profile-image" style="width: 120px; height: 120px;">
+                        <div class="position-absolute bottom-0 end-0 bg-success rounded-circle p-2" 
+                             style="width: 30px; height: 30px; transform: translate(20%, 20%);">
+                            <i class="fas fa-check text-white"></i>
+                        </div>
+                    </div>
+                    <div class="ms-4">
+                        <h2 class="mb-1 fw-bold">{{ $alumno->full_name }}</h2>
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-id-card me-2"></i>{{ $alumno->cedula }}
+                        </p>
+                        <span class="badge bg-primary">
+                            <i class="fas {{ $alumno->rol == 'estudiante' ? 'fa-user-graduate' : 'fa-user-tie' }} me-2"></i>
+                            {{ ucfirst($alumno->rol) }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="{{ route('alumno.asistencias') }}" class="btn btn-primary mb-2 mb-md-0">
+                    <i class="fas fa-clock me-2"></i>Mis Asistencias
                 </a>
                 <form action="{{ route('alumno.logout') }}" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-outline-danger">
-                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
                     </button>
                 </form>
             </div>
         </div>
 
-        <div class="profile-header">
-            <img src="{{ $alumno->foto_url }}" alt="Foto de perfil" class="profile-image">
-            <div>
-                <h3>{{ $alumno->full_name }}</h3>
-                <p class="text-muted mb-0">{{ ucfirst($alumno->rol) }}</p>
-                <p class="mb-0">Documento: {{ $alumno->cedula }}</p>
+        <!-- Sección QR y Datos -->
+        <div class="row">
+            <!-- Columna QR -->
+            <div class="col-md-5">
+                <div class="qr-container text-center">
+                    <div class="d-inline-block position-relative mb-4">
+                        <img src="data:image/svg+xml;base64,{{ $alumno->qr }}" 
+                             alt="Código QR de {{ $alumno->full_name }}"
+                             style="max-width: 250px;">
+                        <div class="position-absolute top-0 end-0 bg-white rounded-circle p-2 shadow-sm"
+                             style="transform: translate(25%, -25%);">
+                            <a href="{{ route('alumno.descargar-qr') }}" class="btn btn-light rounded-circle">
+                                <i class="fas fa-download text-primary"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-3">
+                        <i class="fas fa-qrcode me-2 text-primary"></i>Mi Código QR
+                    </h4>
+                    <p class="text-muted">Usa este código para registrar tu asistencia de forma rápida y segura</p>
+                </div>
             </div>
-        </div>
 
-        <div class="qr-container">
-            <h4 class="mb-3">Mi Código QR</h4>
-            <div class="mb-3">
-                <img src="data:image/svg+xml;base64,{{ $alumno->qr }}" 
-                     alt="Código QR de {{ $alumno->full_name }}">
-            </div>
-            <div class="mt-3">
-                <a href="{{ route('alumno.descargar-qr') }}" class="btn btn-primary">
-                    <i class="fas fa-download"></i> Descargar Código QR
-                </a>
-            </div>
-            <p class="text-muted mt-2">Este es tu código QR personal para registrar asistencia</p>
-        </div>
-
-        <div class="card mt-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Información Personal</h5>
-            </div>
-            <div class="card-body">
-                <dl class="row mb-0">
-                    <dt class="col-sm-3">Nombre Completo</dt>
-                    <dd class="col-sm-9">{{ $alumno->full_name }}</dd>
-
-                    <dt class="col-sm-3">Documento</dt>
-                    <dd class="col-sm-9">{{ $alumno->cedula }}</dd>
-
-                    <dt class="col-sm-3">Correo</dt>
-                    <dd class="col-sm-9">{{ $alumno->correo ?: 'No registrado' }}</dd>
-
-                    <dt class="col-sm-3">Tipo</dt>
-                    <dd class="col-sm-9">{{ ucfirst($alumno->rol) }}</dd>
-                </dl>
+            <!-- Columna Información -->
+            <div class="col-md-7">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h4 class="mb-0 fw-bold text-primary">
+                            <i class="fas fa-user-circle me-2"></i>Información Personal
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-3" style="background: var(--background-color);">
+                                    <small class="text-muted d-block mb-1">Nombre Completo</small>
+                                    <span class="fw-500 fs-5">{{ $alumno->full_name }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-3" style="background: var(--background-color);">
+                                    <small class="text-muted d-block mb-1">Documento</small>
+                                    <span class="fw-500 fs-5">{{ $alumno->cedula }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-3" style="background: var(--background-color);">
+                                    <small class="text-muted d-block mb-1">Correo Electrónico</small>
+                                    <span class="fw-500 fs-5">{{ $alumno->correo ?: 'No registrado' }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-3" style="background: var(--background-color);">
+                                    <small class="text-muted d-block mb-1">Tipo de Usuario</small>
+                                    <span class="fw-500 fs-5">{{ ucfirst($alumno->rol) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

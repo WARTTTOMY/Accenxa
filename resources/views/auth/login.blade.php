@@ -9,88 +9,149 @@
 @endsection
 
 @section('contenido')
-    <section class="vh-100">
-        <div class="container-fluid h-custom">
-            <div class="row d-flex justify-content-center align-items-center h-100">
-                <div class="col-md-9 col-lg-6 col-xl-5">
-                    <img src="{{ asset('admin/img/login.jpeg') }}" class="img-fluid" alt="login">
-                </div>
-                <div class="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
-                    <form method="POST" action="{{ route('login') }}">
-                        @csrf
-                        <div class="d-flex flex-row align-items-center justify-content-center justify-content-lg-start">
-                           <h1 class="lead fw-normal">CONTROL ASISTENCIAS</h1>
-                        </div>
-
-                        <div class="divider d-flex align-items-center my-4">
-                            <p class="text-center fw-bold mx-3 mb-0"></p>
-                        </div>
-
-                        <!-- Email input -->
-                        <div class="form-outline mb-4">
-                            <input type="email" name="email" id="correo" class="form-control form-control-lg @error('email') is-invalid @enderror"
-                                placeholder="Introduzca un correo electrónico" />
-                            <label class="form-label" for="correo">Correo Electronico</label>
-                            @error('email')
-                                <span class="invalid-feedback" role="alert">
-                                    <strong>{{ $message }}</strong>
-                                </span>
-                            @enderror
-                        </div>
-
-                        <!-- Password input -->
-                        <div class="form-outline mb-3">
-                            <input type="password" name="password" id="password" class="form-control form-control-lg  @error('password') is-invalid @enderror"
-                                placeholder="Introduzca la contraseña" />
-                            <label class="form-label" for="password">Contraseña</label>
-                            @error('password')
-                                <span class="invalid-feedback" role="alert">
-                                    <strong>{{ $message }}</strong>
-                                </span>
-                            @enderror
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center">
-                            <!-- Checkbox -->
-                            <div class="form-check mb-0">
-                                <input class="form-check-input me-2" type="checkbox" name="remember" />
-                                <label class="form-check-label" for="form2Example3">
-                                    Recuérdame
-                                </label>
+    <section class="min-vh-100 d-flex align-items-center">
+        <div class="container py-5">
+            <div class="row g-0 justify-content-center">
+                <div class="col-lg-5">
+                    <!-- Tarjeta de login para administradores -->
+                    <div class="card shadow-lg" style="border-radius: 15px; overflow: hidden;">
+                        <div class="card-body p-5">
+                            <div class="text-center mb-5">
+                                <div class="mb-4">
+                                    <img src="{{ asset('admin/img/login.jpeg') }}" 
+                                         class="img-fluid rounded-circle" 
+                                         style="width: 100px; height: 100px; object-fit: cover;" 
+                                         alt="login">
+                                </div>
+                                <h2 class="fw-bold text-primary">Panel de Control</h2>
+                                <p class="text-muted">Acceso para administradores del sistema</p>
                             </div>
-                            <a href="{{ route('password.request') }}" class="text-body">¿Ha olvidado su contraseña?</a>
+
+                            <form method="POST" action="{{ route('login') }}">
+                                @csrf
+                                <!-- Email input -->
+                                <div class="form-floating mb-4">
+                                    <input type="email" 
+                                           name="email" 
+                                           id="correo" 
+                                           class="form-control form-control-lg @error('email') is-invalid @enderror"
+                                           placeholder="Correo electrónico" />
+                                    <label for="correo">
+                                        <i class="fas fa-envelope me-2"></i>Correo Electrónico
+                                    </label>
+                                    @error('email')
+                                        <div class="invalid-feedback">
+                                            <i class="fas fa-exclamation-circle me-2"></i>{{ $message }}
+                                        </div>
+                                    @enderror
+                                </div>
+
+                                <!-- Password input -->
+                                <div class="form-floating mb-4">
+                                    <input type="password" 
+                                           name="password" 
+                                           id="password" 
+                                           class="form-control form-control-lg @error('password') is-invalid @enderror"
+                                           placeholder="Contraseña" />
+                                    <label for="password">
+                                        <i class="fas fa-lock me-2"></i>Contraseña
+                                    </label>
+                                    @error('password')
+                                        <div class="invalid-feedback">
+                                            <i class="fas fa-exclamation-circle me-2"></i>{{ $message }}
+                                        </div>
+                                    @enderror
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="remember" id="remember" />
+                                        <label class="form-check-label" for="remember">
+                                            Recordarme
+                                        </label>
+                                    </div>
+                                    <a href="{{ route('password.request') }}" class="text-primary text-decoration-none">
+                                        <i class="fas fa-key me-2"></i>¿Olvidaste tu contraseña?
+                                    </a>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-lg w-100 mb-4">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Ingresar como Administrador
+                                </button>
+                            </form>
+
+                            <!-- Separador -->
+                            <div class="position-relative my-4">
+                                <hr>
+                                <span class="position-absolute top-50 start-50 translate-middle px-3 bg-white text-muted">
+                                    o
+                                </span>
+                            </div>
+
+                            <!-- Botón portal estudiantes/trabajadores -->
+                            <div class="text-center">
+                                <a href="{{ route('alumno.login') }}" class="btn btn-outline-primary btn-lg w-100">
+                                    <i class="fas fa-user-graduate me-2"></i>Portal de Estudiantes/Trabajadores
+                                </a>
+                                <p class="text-muted mt-3 small">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Accede con tu número de documento
+                                </p>
+                            </div>
                         </div>
-
-                        <div class="text-center text-lg-start mt-4 pt-2">
-                            <button type="submit" class="btn btn-primary btn-lg"
-                              style="padding-left: 2.5rem; padding-right: 2.5rem;">Ingresar</button>
-                          </div>
-
-                    </form>
-
-                    <div class="text-center mt-5">
-                        <hr>
-                        <h5 class="mb-4">¿Eres estudiante o trabajador?</h5>
-                        <a href="{{ route('alumno.login') }}" class="btn btn-outline-primary btn-lg d-block mx-auto" style="max-width: 300px;">
-                            <i class="fas fa-user-graduate me-2"></i>Acceder al Portal de Estudiantes/Trabajadores
-                        </a>
                     </div>
                 </div>
             </div>
         </div>
-        <div
-            class="d-flex flex-column flex-md-row text-center text-md-start justify-content-between py-4 px-4 px-xl-5 bg-primary">
-            <!-- Copyright -->
-            <div class="text-white mb-3 mb-md-0">
-                Copyright © {{ date('Y') }}. All rights reserved.
-            </div>
-            <!-- Copyright -->
-
-            <!-- Right -->
-            <div>
-                
-            </div>
-            <!-- Right -->
-        </div>
     </section>
+
+    <style>
+        body {
+            background-color: var(--background-color);
+            background-image: 
+                linear-gradient(to bottom right, rgba(44, 62, 80, 0.1) 0%, rgba(52, 152, 219, 0.1) 100%),
+                radial-gradient(rgba(52, 152, 219, 0.1) 1px, transparent 1px);
+            background-size: cover, 20px 20px;
+        }
+
+        .form-floating > label {
+            padding-left: 1.5rem;
+        }
+
+        .form-floating > .form-control {
+            padding-left: 1.5rem;
+        }
+
+        .form-control:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+        }
+
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline-primary {
+            color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+    </style>
 @endsection
