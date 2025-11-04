@@ -11,7 +11,28 @@
 @section('contenido')
     <section class="min-vh-100 d-flex align-items-center">
         <div class="container py-5">
-            <div class="row g-0 justify-content-center">
+            <div class="row g-0 justify-content-center align-items-center">
+                <!-- Columna del scanner QR -->
+                <div class="col-lg-6 pe-lg-4">
+                    <div class="card shadow-lg" style="border-radius: 15px; overflow: hidden;">
+                        <div class="card-body p-4">
+                            <div class="text-center mb-3">
+                                <h4 class="fw-bold text-primary mb-0">Registro de Asistencia</h4>
+                                <small class="text-muted">Escanea tu código QR</small>
+                            </div>
+                            
+                            <!-- Contenedor del scanner -->
+                            <div class="scanner-area" style="width: 100%; max-width: 300px; margin: 0 auto;">
+                                <div id="reader" class="border rounded" style="width: 100%; aspect: ratio 2px;"></div>
+                            </div>
+
+                            <!-- Mensajes de estado -->
+                            <div id="scanStatus" class="alert d-none mt-3 mb-0"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna de login para administradores -->
                 <div class="col-lg-5">
                     <!-- Tarjeta de login para administradores -->
                     <div class="card shadow-lg" style="border-radius: 15px; overflow: hidden;">
@@ -105,6 +126,76 @@
         </div>
     </section>
 
+    <!-- Scripts para el scanner QR -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const html5QrCode = new Html5Qrcode("reader");
+            const scanStatus = document.getElementById('scanStatus');
+            
+            const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+                // Detener el scanner después de una lectura exitosa
+                html5QrCode.stop();
+                
+                // Mostrar mensaje de éxito
+                scanStatus.classList.remove('d-none', 'alert-danger');
+                scanStatus.classList.add('alert-success');
+                scanStatus.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Procesando asistencia...';
+                
+                // Enviar la solicitud al servidor
+                fetch('/asistencia/registrar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ qr_data: decodedText })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        scanStatus.innerHTML = `<i class="fas fa-check-circle me-2"></i>${data.message}`;
+                        // Reiniciar el scanner después de 3 segundos
+                        setTimeout(() => {
+                            scanStatus.classList.add('d-none');
+                            startScanner();
+                        }, 3000);
+                    } else {
+                        throw new Error(data.message);
+                    }
+                })
+                .catch(error => {
+                    scanStatus.classList.remove('alert-success');
+                    scanStatus.classList.add('alert-danger');
+                    scanStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>${error.message || 'Error al procesar la asistencia'}`;
+                    // Reiniciar el scanner después de 3 segundos
+                    setTimeout(() => {
+                        scanStatus.classList.add('d-none');
+                        startScanner();
+                    }, 3000);
+                });
+            };
+
+            const startScanner = () => {
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    qrCodeSuccessCallback,
+                    (errorMessage) => {
+                        // Manejar errores silenciosamente
+                    }
+                ).catch((err) => {
+                    scanStatus.classList.remove('d-none');
+                    scanStatus.classList.add('alert-danger');
+                    scanStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Error al iniciar la cámara';
+                });
+            };
+
+            // Iniciar el scanner
+            startScanner();
+        });
+    </script>
+
     <style>
         body {
             background-color: var(--background-color);
@@ -152,6 +243,21 @@
             background-color: var(--secondary-color);
             border-color: var(--secondary-color);
             transform: translateY(-2px);
+        }
+
+        /* Scanner layout tweaks: keep buttons away and ensure reader on top */
+        .scanner-area {
+            margin-bottom: 1.5rem; /* espacio debajo del scanner */
+        }
+
+        #reader {
+            z-index: 10; /* asegurar que la cámara/quadrante esté encima */
+            background: #000; /* fondo oscuro ayuda a la cámara en algunos navegadores */
+        }
+
+        /* Si tienes un botón de descarga cerca del scanner, aplícale esta clase */
+        .btn-download {
+            margin-top: 1.5rem !important;
         }
     </style>
 @endsection
