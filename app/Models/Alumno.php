@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class Alumno extends Model
@@ -36,21 +37,31 @@ class Alumno extends Model
 
     // Accessor que genera el QR dinámicamente usando SVG (no requiere extensiones)
     public function getQrAttribute(){
+        // Asegurar que el código existe
+        if (empty($this->codigo)) {
+            return null;
+        }
+        
         // Datos que contendrá el QR
         $data = [
             'id' => $this->codigo,
-            'nombre' => $this->full_name,
-            'documento' => $this->documento_identidad,
-            'carrera' => $this->carrera,
+            'nombre' => $this->full_name ?? ($this->nombres . ' ' . $this->apellidos),
+            'documento' => $this->documento_identidad ?? '',
+            'carrera' => $this->carrera ?? '',
             'valido_hasta' => $this->fecha_expiracion ? $this->fecha_expiracion->format('Y-m-d') : null,
             'hash' => hash('sha256', $this->codigo . config('app.key'))
         ];
         
-        return base64_encode(
-            QrCode::format('svg')
-                ->size(300)
-                ->generate(json_encode($data))
-        );
+        try {
+            return base64_encode(
+                QrCode::format('svg')
+                    ->size(300)
+                    ->generate(json_encode($data))
+            );
+        } catch (\Exception $e) {
+            Log::error('Error al generar QR: ' . $e->getMessage());
+            return null;
+        }
     }
 
     public function getFullNameAttribute(){
