@@ -84,6 +84,12 @@
         let alumno = document.getElementById('alumno');
 
         $(document).ready(function () {
+            // Inicializar Select2
+            $('.select2').select2({
+                placeholder: "Seleccione un alumno",
+                allowClear: true
+            });
+            
             console.log(asistencias);
             loadTable(asistencias);
         })
@@ -91,11 +97,13 @@
         const loadTable = asistencias => {
             resetTable();
             asistencias.forEach(asistencia => {
-
+                // Formatear la fecha para mostrar
+                const fecha = new Date(asistencia.fecha).toLocaleDateString('es-ES');
+                
                 table.row.add([
                     asistencia.codigo,
                     asistencia.full_name,
-                    asistencia.fecha,
+                    fecha,
                 ]).draw(false);
             });
         }
@@ -120,15 +128,18 @@
             let filter = asistencias;
 
             if(f_inicio.value != '' && f_fin.value != '' ){
-                filter = filter.filter(asistencia => asistencia.fecha >= f_inicio.value && asistencia.fecha <= f_fin.value )
+                filter = filter.filter(asistencia => {
+                    const fecha = new Date(asistencia.fecha);
+                    const inicio = new Date(f_inicio.value);
+                    const fin = new Date(f_fin.value);
+                    return fecha >= inicio && fecha <= fin;
+                });
             }
             if(alumno.value != ''){
-                filter = filter.filter(asistencia => asistencia.codigo == alumno.value  )
+                filter = filter.filter(asistencia => asistencia.codigo == alumno.value);
             }
 
-
             loadTable(filter);
-            console.log(alumno.value);
         }
     </script> 
 @endsection
