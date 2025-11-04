@@ -67,6 +67,14 @@
                           </div>
 
                     </form>
+
+                    <div class="text-center mt-5">
+                        <hr>
+                        <h5 class="mb-4">¿Eres estudiante o trabajador?</h5>
+                        <a href="{{ route('alumno.login') }}" class="btn btn-outline-primary btn-lg d-block mx-auto" style="max-width: 300px;">
+                            <i class="fas fa-user-graduate me-2"></i>Acceder al Portal de Estudiantes/Trabajadores
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -74,7 +82,7 @@
             class="d-flex flex-column flex-md-row text-center text-md-start justify-content-between py-4 px-4 px-xl-5 bg-primary">
             <!-- Copyright -->
             <div class="text-white mb-3 mb-md-0">
-                Copyright © 2022. All rights reserved.
+                Copyright © {{ date('Y') }}. All rights reserved.
             </div>
             <!-- Copyright -->
 

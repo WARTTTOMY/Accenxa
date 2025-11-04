@@ -1,19 +1,20 @@
 @extends('layouts.app')
+
 @section('titulo')
     Alumnos
 @endsection
+
 @section('menu_select')
-    {{$select = 'alumnos'}}
+    @php $select = 'alumnos'; @endphp
 @endsection
+
 @section('content')
-   
     <div class="row">
         <div class="col-md-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-
                     <button type="button" class="btn btn-primary btn-sm"
-                        onclick="accionAlumno('agregar','-','{{ route('alumnos.store') }}')" title="registrar alumno">
+                        onclick="alumno('agregar','-','{{ route('alumnos.store') }}')" title="Registrar alumno">
                         <i class="fas fa-user-plus ml-2"></i> Registrar Alumno
                     </button>
 
@@ -22,28 +23,28 @@
                             <thead class="thead-light">
                                 <tr>
                                     <th class="text-center">Foto</th>
-                                    <th class="text-center">Codigo</th>
+                                    <th class="text-center">Cédula</th>
                                     <th class="text-center">Nombres</th>
                                     <th class="text-center">Apellidos</th>
-                                    <th class="text-center">Carrera</th>
+                                    <th class="text-center">Rol</th>
                                     <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                            </tbody>
+                            <tbody></tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    {{-- Modal agregar Alumno --}}
-    <div class="modal fade" id="modalAddAlumno" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+
+    {{-- Modal agregar/editar Alumno --}}
+    <div class="modal fade" id="modalAddAlumno" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalAlumnoTitle"></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <form method="post" id="form_save" enctype="multipart/form-data">
                     @csrf
@@ -51,16 +52,18 @@
                     <input type="hidden" id="input_accion">
 
                     <div class="modal-body">
-                        <div class="row">
-                            <div class="input-group my-2">
-                                <label for="codigo" class="input-group-text col-sm-4">Código *</label>
-                                <input type="text" class="form-control col-sm-8" name="codigo" id="codigo" required>
+                        <!-- QR Code Section -->
+                        <div class="row mb-3" id="qr_section" style="display:none;">
+                            <div class="col-12 text-center">
+                                <h5>Código QR</h5>
+                                <div id="qr_container"></div>
                             </div>
                         </div>
+
                         <div class="row">
                             <div class="input-group my-2">
-                                <label for="documento_identidad" class="input-group-text col-sm-4">Documento ID</label>
-                                <input type="text" class="form-control col-sm-8" name="documento_identidad" id="documento_identidad">
+                                <label for="cedula" class="input-group-text col-sm-4">Cédula *</label>
+                                <input type="text" class="form-control col-sm-8" name="cedula" id="cedula" required>
                             </div>
                         </div>
                         <div class="row">
@@ -77,20 +80,18 @@
                         </div>
                         <div class="row">
                             <div class="input-group my-2">
-                                <label for="carrera" class="input-group-text col-sm-4">Carrera</label>
-                                <input type="text" class="form-control col-sm-8" name="carrera" id="carrera">
+                                <label for="correo" class="input-group-text col-sm-4">Correo</label>
+                                <input type="email" class="form-control col-sm-8" name="correo" id="correo">
                             </div>
                         </div>
                         <div class="row">
                             <div class="input-group my-2">
-                                <label for="semestre" class="input-group-text col-sm-4">Semestre</label>
-                                <input type="text" class="form-control col-sm-8" name="semestre" id="semestre">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="input-group my-2">
-                                <label for="fecha_expiracion" class="input-group-text col-sm-4">Válido hasta</label>
-                                <input type="date" class="form-control col-sm-8" name="fecha_expiracion" id="fecha_expiracion">
+                                <label for="rol" class="input-group-text col-sm-4">Rol *</label>
+                                <select class="form-control col-sm-8" name="rol" id="rol" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="estudiante">Estudiante</option>
+                                    <option value="trabajador">Trabajador</option>
+                                </select>
                             </div>
                         </div>
                         <div class="row">
@@ -105,6 +106,7 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="button" class="btn btn-primary" onclick="guardar()">Guardar</button>
@@ -113,80 +115,15 @@
             </div>
         </div>
     </div>
-
-    {{-- Modal show Alumno --}}
-    <div class="modal fade" id="modalShowAlumno" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Carnet Digital</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-4 text-center">
-                            <img id="s_foto" src="" class="img-fluid img-thumbnail" alt="Foto del estudiante" style="max-width: 200px;">
-                        </div>
-                        <div class="col-md-8">
-                            <div class="row">
-                                <div class="input-group my-2 col-md-12">
-                                    <label for="s_codigo" class="input-group-text col-sm-4">Código</label>
-                                    <input type="text" class="form-control col-sm-8" id="s_codigo" readonly>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="input-group my-2 col-md-12">
-                                    <label for="s_nombres" class="input-group-text col-sm-4">Nombres</label>
-                                    <input type="text" class="form-control col-sm-8" id="s_nombres" readonly>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="input-group my-2 col-md-12">
-                                    <label for="s_apellidos" class="input-group-text col-sm-4">Apellidos</label>
-                                    <input type="text" class="form-control col-sm-8" id="s_apellidos" readonly>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="input-group my-2 col-md-12">
-                                    <label for="s_carrera" class="input-group-text col-sm-4">Carrera</label>
-                                    <input type="text" class="form-control col-sm-8" id="s_carrera" readonly>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="input-group my-2 col-md-12">
-                                    <label for="s_estado" class="input-group-text col-sm-4">Estado</label>
-                                    <input type="text" class="form-control col-sm-8" id="s_estado" readonly>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row justify-content-md-center mt-3">
-                        <div class="col-md-12 text-center">
-                            <h6>Código QR de Acceso</h6>
-                            <img id="qr_alumno" class="img-fluid" alt="Código QR del estudiante" width="300">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="button" class="btn btn-primary" onclick="imprimirCarnet()">
-                        <i class="fas fa-print"></i> Imprimir Carnet
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @section('scripts')
-    <script>
-    let codigo = document.getElementById('codigo');
-    let documento_identidad = document.getElementById('documento_identidad');
+<script>
+    let cedula = document.getElementById('cedula');
     let nombres = document.getElementById('nombres');
     let apellidos = document.getElementById('apellidos');
-    let carrera = document.getElementById('carrera');
-    let semestre = document.getElementById('semestre');
-    let fecha_expiracion = document.getElementById('fecha_expiracion');
+    let correo = document.getElementById('correo');
+    let rol = document.getElementById('rol');
     let foto = document.getElementById('foto');
     let input_accion = document.getElementById('input_accion');
 
@@ -213,210 +150,223 @@
         });
     });
 
-    /* ✅ nuevo nombre: antes era "alumno" */
-    const accionAlumno = (accion, url_show, url) => {
+    const alumno = (accion, url_show, url) => {
         input_accion.value = accion;
-        if (accion == 'agregar') {
-            codigo.value = '';
-            documento_identidad.value = '';
-            nombres.value = '';
-            apellidos.value = '';
-            carrera.value = '';
-            semestre.value = '';
-            fecha_expiracion.value = '';
-            foto.value = '';
-            $('#preview_foto').hide();
+        
+        // Limpiar formulario al inicio
+        limpiarFormulario();
+        $('#qr_section').hide();
+
+        if(accion == 'agregar') {
+            // Configurar para agregar nuevo alumno
             $('#modalAlumnoTitle').html('Registrar Estudiante');
             $('#_method').val('POST');
-        } else if (accion == 'editar') {
-            show_alumno('edit', url_show);
+            habilitarCampos(true);
+            mostrarBotonGuardar(true);
+        } else if(accion == 'editar') {
+            // Configurar para editar alumno
             $('#modalAlumnoTitle').html('Editar estudiante');
             $('#_method').val('PUT');
+            cargarDatosAlumno(url_show, true); // true para modo edición
+            habilitarCampos(true);
+            mostrarBotonGuardar(true);
         } else {
-            show_alumno('show', url_show);
+            // Configurar para mostrar alumno
+            $('#modalAlumnoTitle').html('Detalles del Estudiante');
+            cargarDatosAlumno(url_show, false); // false para modo visualización
+            habilitarCampos(false);
+            mostrarBotonGuardar(false);
         }
+
         $('#form_save').attr('action', url);
         $('#modalAddAlumno').modal('show');
     }
 
+    // Función para habilitar/deshabilitar campos
+    const habilitarCampos = (habilitar) => {
+        $('#cedula, #nombres, #apellidos, #correo, #rol, #foto').prop('disabled', !habilitar);
+    }
+
+    // Función para mostrar/ocultar botón guardar
+    const mostrarBotonGuardar = (mostrar) => {
+        $('.modal-footer button.btn-primary').toggle(mostrar);
+    }
+
+    // Función para cargar datos del alumno
+    const cargarDatosAlumno = async (url, esEdicion) => {
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const alumno = await response.json();
+            console.log('Datos del alumno:', alumno);
+
+            // Llenar los campos del formulario
+            cedula.value = alumno.cedula;
+            nombres.value = alumno.nombres;
+            apellidos.value = alumno.apellidos;
+            correo.value = alumno.correo || '';
+            rol.value = alumno.rol;
+
+            // Manejar la foto
+            if(alumno.foto){
+                $('#imagen_preview').attr('src', alumno.foto_url);
+                $('#preview_foto').show();
+            } else {
+                $('#preview_foto').hide();
+            }
+
+            // Mostrar QR solo en modo visualización
+            if(!esEdicion && alumno.qr) {
+                const qrHtml = atob(alumno.qr);
+                $('#qr_container').html(qrHtml);
+                $('#qr_section').show();
+            } else {
+                $('#qr_section').hide();
+            }
+
+        } catch (err) {
+            console.error('Error al cargar datos:', err);
+            Swal.fire('Error', 'No se pudo cargar la información del estudiante', 'error');
+        }
+    }
+
     const save_alumno = () => {
         let formData = new FormData();
-        formData.append('codigo', codigo.value);
-        formData.append('documento_identidad', documento_identidad.value);
+        formData.append('cedula', cedula.value);
         formData.append('nombres', nombres.value);
         formData.append('apellidos', apellidos.value);
-        formData.append('carrera', carrera.value);
-        formData.append('semestre', semestre.value);
-        formData.append('fecha_expiracion', fecha_expiracion.value);
+        formData.append('correo', correo.value);
+        formData.append('rol', rol.value);
 
-        if (foto.files[0]) {
-            formData.append('foto', foto.files[0]);
-        }
+        if(foto.files[0]) formData.append('foto', foto.files[0]);
 
-        let url = $('#form_save').attr('action');
-        fetch(url, {
+        fetch($('#form_save').attr('action'), {
             method: 'POST',
             body: formData,
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            }
-        }).then(res => res.json())
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                title: 'Error',
-                text: 'Hubo un problema al guardar el estudiante',
-                icon: 'error',
-                confirmButtonText: 'Cerrar'
-            });
+            headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}
         })
+        .then(res => res.json())
         .then(response => {
-            if (response && response.res == 'ok') {
+            if(response && response.res == 'ok'){
                 $('#modalAddAlumno').modal('hide');
                 limpiarFormulario();
-
-                Swal.fire({
-                    title: 'Registro Guardado',
-                    text: 'El estudiante fue registrado exitosamente',
-                    icon: 'success',
-                    confirmButtonText: 'Cerrar'
-                });
-
+                Swal.fire('Registro Guardado', 'El estudiante fue registrado exitosamente', 'success');
                 loadTable(response.alumnos);
             }
-        });
+        }).catch(err => console.error(err));
     }
 
     const update_alumno = () => {
         let formData = new FormData();
         formData.append('_method', 'PUT');
-        formData.append('codigo', codigo.value);
-        formData.append('documento_identidad', documento_identidad.value);
+        formData.append('cedula', cedula.value);
         formData.append('nombres', nombres.value);
         formData.append('apellidos', apellidos.value);
-        formData.append('carrera', carrera.value);
-        formData.append('semestre', semestre.value);
-        formData.append('fecha_expiracion', fecha_expiracion.value);
+        formData.append('correo', correo.value);
+        formData.append('rol', rol.value);
+        if(foto.files[0]) formData.append('foto', foto.files[0]);
 
-        if (foto.files[0]) {
-            formData.append('foto', foto.files[0]);
-        }
-
-        let url = $('#form_save').attr('action');
-
-        fetch(url, {
+        fetch($('#form_save').attr('action'), {
             method: 'POST',
             body: formData,
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            }
-        }).then(res => res.json())
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                title: 'Error',
-                text: 'Hubo un problema al actualizar el estudiante',
-                icon: 'error',
-                confirmButtonText: 'Cerrar'
-            });
+            headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}
         })
+        .then(res => res.json())
         .then(response => {
-            if (response && response.res == 'ok') {
+            if(response && response.res == 'ok'){
                 $('#modalAddAlumno').modal('hide');
                 limpiarFormulario();
-
-                Swal.fire({
-                    title: 'Registro Actualizado',
-                    text: 'Los datos del estudiante fueron actualizados',
-                    icon: 'success',
-                    confirmButtonText: 'Cerrar'
-                });
-
+                Swal.fire('Registro Actualizado', 'Los datos del estudiante fueron actualizados', 'success');
                 loadTable(response.alumnos);
             }
-        });
+        }).catch(err => console.error(err));
     }
 
     const limpiarFormulario = () => {
-        codigo.value = '';
-        documento_identidad.value = '';
+        cedula.value = '';
         nombres.value = '';
         apellidos.value = '';
-        carrera.value = '';
-        semestre.value = '';
-        fecha_expiracion.value = '';
+        correo.value = '';
+        rol.value = '';
         foto.value = '';
         $('#preview_foto').hide();
     }
 
     const guardar = () => {
-        if (codigo.value == '' || nombres.value == '' || apellidos.value == '') {
-            Swal.fire({
-                title: 'Campos obligatorios vacíos',
-                text: 'Código, nombres y apellidos son obligatorios',
-                icon: 'warning',
-                confirmButtonText: 'Cerrar'
-            })
+        if(!cedula.value || !nombres.value || !apellidos.value) {
+            Swal.fire('Campos obligatorios vacíos', 'Cédula, nombres y apellidos son obligatorios', 'warning');
         } else {
-            if (input_accion.value == 'agregar') {
-                save_alumno();
-            } else if (input_accion.value == 'editar') {
-                update_alumno();
-            }
+            input_accion.value == 'agregar' ? save_alumno() : update_alumno();
         }
     }
 
-    /* ✅ corregido: ahora no se llama igual que la función principal */
     const show_alumno = async (act, url) => {
         try {
-            let dataAlumno = await fetch(url)
-                .then(response => response.json());
-
-            if (act == 'show') {
-                $('#s_codigo').val(dataAlumno.codigo);
-                $('#s_nombres').val(dataAlumno.nombres);
-                $('#s_apellidos').val(dataAlumno.apellidos);
-                $('#s_carrera').val(dataAlumno.carrera || 'No especificada');
-                $('#s_estado').val(dataAlumno.estado ? dataAlumno.estado.toUpperCase() : 'ACTIVO');
-
-                if (dataAlumno.foto) {
-                    $('#s_foto').attr('src', `/storage/${dataAlumno.foto}`);
-                } else {
-                    $('#s_foto').attr('src', '/admin/img/default-avatar.png');
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
                 }
-
-                $('#qr_alumno').attr('src', `data:image/svg+xml;base64,${dataAlumno.qr}`);
-
-                $('#modalShowAlumno').modal('show');
-            } else {
-                codigo.value = dataAlumno.codigo;
-                documento_identidad.value = dataAlumno.documento_identidad || '';
-                nombres.value = dataAlumno.nombres;
-                apellidos.value = dataAlumno.apellidos;
-                carrera.value = dataAlumno.carrera || '';
-                semestre.value = dataAlumno.semestre || '';
-                fecha_expiracion.value = dataAlumno.fecha_expiracion || '';
-
-                if (dataAlumno.foto) {
-                    $('#imagen_preview').attr('src', `/storage/${dataAlumno.foto}`);
-                    $('#preview_foto').show();
-                } else {
-                    $('#preview_foto').hide();
-                }
-            }
-        } catch (error) {
-            console.error('Error al cargar alumno:', error);
-            Swal.fire({
-                title: 'Error',
-                text: 'No se pudo cargar la información del estudiante',
-                icon: 'error',
-                confirmButtonText: 'Cerrar'
             });
-        }
-    }
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const alumno = await response.json();
+            console.log('Datos del alumno:', alumno); // Debug
 
-    const imprimirCarnet = () => {
-        window.print();
+            // Llenar los campos del formulario
+            cedula.value = alumno.cedula;
+            nombres.value = alumno.nombres;
+            apellidos.value = alumno.apellidos;
+            correo.value = alumno.correo || '';
+            rol.value = alumno.rol;
+
+            // Manejar la foto
+            if(alumno.foto){
+                $('#imagen_preview').attr('src', alumno.foto_url);
+                $('#preview_foto').show();
+            } else {
+                $('#preview_foto').hide();
+            }
+
+            // Manejar el QR
+            if(act === 'show' && alumno.qr) {
+                // Decodificar el QR (viene en base64)
+                const qrHtml = atob(alumno.qr);
+                $('#qr_container').html(qrHtml);
+                $('#qr_section').show();
+            } else {
+                $('#qr_section').hide();
+            }
+
+            // Desactivar campos si es modo visualización
+            if(act === 'show') {
+                $('#cedula, #nombres, #apellidos, #correo, #rol, #foto').prop('disabled', true);
+                $('.modal-footer button.btn-primary').hide(); // Ocultar botón de guardar
+            } else {
+                $('#cedula, #nombres, #apellidos, #correo, #rol, #foto').prop('disabled', false);
+                $('.modal-footer button.btn-primary').show(); // Mostrar botón de guardar
+            }
+
+        } catch (err) {
+            console.error('Error al cargar datos:', err);
+            Swal.fire('Error', 'No se pudo cargar la información del estudiante', 'error');
+        }
     }
 
     const delete_alumno = url_delete => {
@@ -425,73 +375,60 @@
             text: "Esta acción no se podrá revertir",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
             confirmButtonText: 'Si, eliminar!',
             cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
+        }).then(result => {
+            if(result.isConfirmed){
                 fetch(url_delete, {
                     method: 'DELETE',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json'
                     }
-                }).then(res => res.json())
-                .catch(error => {
-                    console.error('Error:', error);
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'No se pudo eliminar el alumno',
-                        icon: 'error',
-                        confirmButtonText: 'Cerrar'
-                    });
                 })
+                .then(res => res.json())
                 .then(response => {
-                    if (response && response.res == 'ok') {
-                        Swal.fire(
-                            'Eliminado!',
-                            'El Alumno fue eliminado.',
-                            'success'
-                        )
+                    if(response && response.res == 'ok'){
+                        Swal.fire('Eliminado!', 'El alumno fue eliminado.', 'success');
                         loadTable(response.alumnos);
                     }
-                });
+                }).catch(err => console.error(err));
             }
         });
     }
 
     const loadTable = alumnos => {
-        resetTable();
+        table.clear().draw();
         alumnos.forEach(alumno => {
             let ruta_show = `/alumnos/${alumno.id}/show`;
             let ruta_update = `/alumnos/${alumno.id}`;
-            let ruta_destroy = `/alumnos/${alumno.id}/destroy`;
+            let ruta_destroy = `/alumnos/${alumno.id}`;
 
             let fotoHtml = alumno.foto 
-                ? `<img src="/storage/${alumno.foto}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">`
-                : `<img src="/admin/img/default-avatar.png" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">`;
+                ? `<img src="/storage/${alumno.foto}" class="img-thumbnail" style="width:50px;height:50px;object-fit:cover;">`
+                : `<img src="/admin/images/default-avatar.png" class="img-thumbnail" style="width:50px;height:50px;object-fit:cover;">`;
 
             table.row.add([
                 fotoHtml,
-                alumno.codigo,
+                alumno.cedula,
                 alumno.nombres,
                 alumno.apellidos,
-                alumno.carrera || 'N/A',
-                `   
+                alumno.rol,
+                `
                 <div class="btn-group">
-                    <button type="button" onclick="show_alumno('show','${ruta_show}')" class="btn btn-primary btn-sm" title="Ver QR"><i class="fas fa-eye"></i></button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="accionAlumno('editar','${ruta_show}','${ruta_update}')" title="Editar"><i class="fas fa-user-edit"></i></button>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="delete_alumno('${ruta_destroy}')" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
+                    <button onclick="alumno('ver','${ruta_show}','${ruta_update}')" class="btn btn-info btn-sm" title="Ver Detalles y QR">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="alumno('editar','${ruta_show}','${ruta_update}')" class="btn btn-secondary btn-sm" title="Editar Alumno">
+                        <i class="fas fa-user-edit"></i>
+                    </button>
+                    <button onclick="delete_alumno('${ruta_destroy}')" class="btn btn-danger btn-sm" title="Eliminar Alumno">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </div>
-                `,
+                `
             ]).draw(false);
         });
     }
-
-    const resetTable = () => {
-        table.clear().draw();
-    }
 </script>
-
 @endsection

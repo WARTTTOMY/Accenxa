@@ -11,11 +11,11 @@ class AsistenciaController extends Controller
     
     public function index()
     {
-        $asistencias = Asistencia::all()->map(function ($a) {
+        $asistencias = Asistencia::orderBy('fecha', 'desc')->get()->map(function ($a) {
             return  [
                 'codigo' => $a->alumno->codigo,
                 'full_name' => $a->alumno->full_name,
-                'fecha' => $a->fecha,
+                'fecha' => date('Y-m-d', strtotime($a->fecha)),
             ];
         });
 
