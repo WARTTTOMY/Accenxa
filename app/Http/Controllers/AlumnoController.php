@@ -2,231 +2,216 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\ConfigHelper;
 use App\Models\Alumno;
 use App\Models\Asistencia;
 use Carbon\Carbon;
-use Illuminate\Contracts\Session\Session;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class AlumnoController extends Controller
 {
-    
+    // Listado de alumnos
     public function index()
     {
         $alumnos = Alumno::all();
         return view('alumnos.index', compact('alumnos'));
     }
 
+    // Crear nuevo alumno
     public function store(Request $request)
     {
-        try {
-            // Validación con foto incluida
-            $request->validate([
-                'codigo' => 'required|unique:alumnos,codigo',
-                'documento_identidad' => 'nullable|string|max:50',
-                'nombres' => 'required|string|max:255',
-                'apellidos' => 'required|string|max:255',
-                'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'carrera' => 'nullable|string|max:255',
-                'semestre' => 'nullable|string|max:50',
-                'fecha_expiracion' => 'nullable|date',
-            ]);
+        $request->validate([
+            'cedula' => 'required|unique:alumnos,cedula',
+            'nombres' => 'required|string|max:255',
+            'apellidos' => 'required|string|max:255',
+            'correo' => 'nullable|email|max:255',
+            'rol' => 'required|in:estudiante,trabajador',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
 
-            $alumno = new Alumno();
-            $alumno->codigo = trim($request->codigo);
-            $alumno->documento_identidad = $request->documento_identidad ? trim($request->documento_identidad) : null;
-            $alumno->nombres = trim($request->nombres);
-            $alumno->apellidos = trim($request->apellidos);
-            $alumno->carrera = $request->carrera ? trim($request->carrera) : null;
-            $alumno->semestre = $request->semestre ? trim($request->semestre) : null;
-            $alumno->estado = 'activo';
-            $alumno->fecha_expiracion = $request->fecha_expiracion;
-            
-            // Manejar la carga de la foto
-            if ($request->hasFile('foto')) {
-                try {
-                    $foto = $request->file('foto');
-                    $nombreFoto = time() . '_' . preg_replace('/[^a-zA-Z0-9]/', '_', $alumno->codigo) . '.' . $foto->getClientOriginalExtension();
-                    $ruta = $foto->storeAs('fotos_estudiantes', $nombreFoto, 'public');
-                    $alumno->foto = $ruta;
-                } catch (\Exception $e) {
-                    Log::error('Error al guardar foto: ' . $e->getMessage());
-                    // Continuar sin foto si hay error
-                }
-            }
-            
-            $alumno->save();
+        $alumno = new Alumno();
+        $alumno->cedula = $request->cedula;
+        $alumno->nombres = $request->nombres;
+        $alumno->apellidos = $request->apellidos;
+        $alumno->correo = $request->correo;
+        $alumno->rol = $request->rol;
 
-            $alumnos = Alumno::all();
-
-            return response()->json(['alumnos' => $alumnos, 'res' => 'ok']);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'alumnos' => Alumno::all(),
-                'res' => 'error',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            Log::error('Error al crear alumno: ' . $e->getMessage());
-            return response()->json([
-                'alumnos' => Alumno::all(),
-                'res' => 'error',
-                'msg' => 'Error al crear el estudiante'
-            ], 500);
+        if ($request->hasFile('foto')) {
+            $foto = $request->file('foto');
+            $nombreFoto = time() . '_' . $alumno->cedula . '.' . $foto->getClientOriginalExtension();
+            $ruta = $foto->storeAs('fotos_estudiantes', $nombreFoto, 'public');
+            $alumno->foto = $ruta;
         }
+
+        $alumno->save();
+
+        return response()->json(['alumnos' => Alumno::all(), 'res' => 'ok']);
     }
-    
+
+    // Mostrar un alumno
     public function show(Alumno $alumno)
     {
-        return $alumno;
+        try {
+            // Generar datos para el QR
+            $qrData = [
+                'cedula' => $alumno->cedula,
+                'nombre' => $alumno->getFullNameAttribute(),
+                'rol' => $alumno->rol,
+                'id' => $alumno->id
+            ];
+            
+            $data = $alumno->toArray();
+            $data['foto_url'] = $alumno->getFotoUrlAttribute();
+            $data['qr'] = base64_encode(
+                QrCode::format('svg')
+                    ->size(300)
+                    ->errorCorrection('H')
+                    ->margin(1)
+                    ->generate(json_encode($qrData))
+            );
+            $data['full_name'] = $alumno->getFullNameAttribute();
+            
+            \Log::info('Mostrando alumno:', ['id' => $alumno->id, 'qr_data' => $qrData]);
+            
+            return response()->json($data);
+        } catch (\Exception $e) {
+            \Log::error('Error al mostrar alumno:', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Error al cargar los datos del alumno'], 500);
+        }
     }
 
+    // Registrar asistencia
     public function save_record(Request $request)
     {
         try {
-            // Validar que se recibió el código
-            $request->validate([
-                'codigo' => 'required|string'
+            \Log::info('Datos brutos recibidos:', [
+                'request_all' => $request->all(),
+                'request_content' => $request->getContent(),
+                'content_type' => $request->header('Content-Type')
             ]);
-
-            $codigo = $request->codigo;
+            
+            // Intentar obtener los datos del cuerpo de la solicitud
+            $contenido = $request->getContent();
+            
+            // Si hay datos en formato JSON en el cuerpo
+            if (!empty($contenido)) {
+                try {
+                    if (is_string($contenido)) {
+                        // Si el contenido parece ser una cadena JSON escapada, decodificarla primero
+                        if (strpos($contenido, '\\"') !== false) {
+                            $contenido = stripslashes($contenido);
+                        }
+                        $datos = json_decode($contenido, true);
+                        if (json_last_error() !== JSON_ERROR_NONE) {
+                            throw new \Exception('Error decodificando JSON: ' . json_last_error_msg());
+                        }
+                    } else {
+                        $datos = $contenido;
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Error procesando contenido:', [
+                        'error' => $e->getMessage(),
+                        'contenido' => $contenido
+                    ]);
+                    throw $e;
+                }
+            } else {
+                // Si no hay datos en el cuerpo, intentar obtener del request
+                $datos = $request->all();
+            }
+            
+            \Log::info('Datos procesados:', $datos);
+        
+            $alumno = Alumno::buscarPorQR($datos);
             $hoy = Carbon::now()->format('Y-m-d');
 
-            // Buscar el alumno por código
-            $alumno = Alumno::where('codigo', $codigo)->first();
-
-            if (is_null($alumno)) {
-                return response()->json([
-                    'msg' => 'Código no válido - Estudiante no encontrado',
-                    'level' => 'error'
-                ], 404);
+            if(!$alumno) {
+                \Log::error('Alumno no encontrado con los datos:', $datos);
+                return response()->json(['msg' => 'No se encontró el alumno', 'level' => 'error']);
             }
 
-            // Verificar si el carnet está activo
-            if (!$alumno->isActivo()) {
-                return response()->json([
-                    'msg' => 'Carnet no válido o expirado',
-                    'level' => 'error'
-                ], 403);
+            $validar = Asistencia::where('alumno_id', $alumno->id)
+                                ->where('fecha', $hoy)
+                                ->first();
+
+            if($validar) {
+                return response()->json(['msg' => 'Ya registró asistencia', 'level' => 'warning']);
             }
 
-            // Verificar si ya registró asistencia hoy
-            $asistenciaExistente = Asistencia::where('alumno_id', $alumno->id)
-                                             ->where('fecha', $hoy)
-                                             ->first();
-
-            if ($asistenciaExistente) {
-                return response()->json([
-                    'msg' => 'Ya registró asistencia hoy',
-                    'level' => 'warning'
-                ]);
-            }
-
-            // Registrar la asistencia
-            $asistencia = new Asistencia();
-            $asistencia->alumno_id = $alumno->id;
-            $asistencia->fecha = $hoy;
-            $asistencia->save();
-
-            return response()->json([
-                'msg' => 'Asistencia registrada correctamente - ' . $alumno->nombres . ' ' . $alumno->apellidos,
-                'level' => 'success'
+            Asistencia::create([
+                'alumno_id' => $alumno->id,
+                'fecha' => $hoy,
             ]);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
+            
+            \Log::info('Asistencia registrada para alumno:', [
+                'alumno_id' => $alumno->id,
+                'cedula' => $alumno->cedula,
+                'nombre' => $alumno->full_name,
+                'fecha' => $hoy
+            ]);
+            
             return response()->json([
-                'msg' => 'Error de validación: ' . $e->getMessage(),
-                'level' => 'error'
-            ], 422);
+                'msg' => 'Asistencia registrada para ' . $alumno->full_name,
+                'level' => 'success',
+                'alumno' => [
+                    'nombre' => $alumno->full_name,
+                    'rol' => $alumno->rol,
+                    'cedula' => $alumno->cedula
+                ]
+            ]);
+            
         } catch (\Exception $e) {
-            \Log::error('Error al registrar asistencia: ' . $e->getMessage());
-            return response()->json([
-                'msg' => 'Error al procesar la solicitud',
-                'level' => 'error'
-            ], 500);
+            \Log::error('Error al procesar asistencia:', [
+                'error' => $e->getMessage(),
+                'datos' => $request->all()
+            ]);
+            return response()->json(['msg' => 'Error al procesar la asistencia', 'level' => 'error']);
         }
     }
 
-   
-    public function edit(Alumno $alumno)
-    {
-        //
-    }
-
-  
+    // Actualizar alumno
     public function update(Request $request, Alumno $alumno)
     {
-        try {
-            // Validación
-            $request->validate([
-                'codigo' => 'required|unique:alumnos,codigo,' . $alumno->id,
-                'documento_identidad' => 'nullable|string|max:50',
-                'nombres' => 'required|string|max:255',
-                'apellidos' => 'required|string|max:255',
-                'carrera' => 'nullable|string|max:255',
-                'semestre' => 'nullable|string|max:50',
-                'fecha_expiracion' => 'nullable|date',
-                'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            ]);
+        $request->validate([
+            'cedula' => 'required|unique:alumnos,cedula,' . $alumno->id,
+            'nombres' => 'required|string|max:255',
+            'apellidos' => 'required|string|max:255',
+            'correo' => 'nullable|email|max:255',
+            'rol' => 'required|in:estudiante,trabajador',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
 
-            $alumno->codigo = trim($request->codigo);
-            $alumno->documento_identidad = $request->documento_identidad ? trim($request->documento_identidad) : null;
-            $alumno->nombres = trim($request->nombres);
-            $alumno->apellidos = trim($request->apellidos);
-            $alumno->carrera = $request->carrera ? trim($request->carrera) : null;
-            $alumno->semestre = $request->semestre ? trim($request->semestre) : null;
-            $alumno->fecha_expiracion = $request->fecha_expiracion;
-            
-            // Manejar la carga de la foto si se proporciona
-            if ($request->hasFile('foto')) {
-                try {
-                    // Eliminar foto anterior si existe
-                    if ($alumno->foto && Storage::disk('public')->exists($alumno->foto)) {
-                        Storage::disk('public')->delete($alumno->foto);
-                    }
-                    
-                    $foto = $request->file('foto');
-                    $nombreFoto = time() . '_' . preg_replace('/[^a-zA-Z0-9]/', '_', $alumno->codigo) . '.' . $foto->getClientOriginalExtension();
-                    $ruta = $foto->storeAs('fotos_estudiantes', $nombreFoto, 'public');
-                    $alumno->foto = $ruta;
-                } catch (\Exception $e) {
-                    Log::error('Error al actualizar foto: ' . $e->getMessage());
-                    // Continuar sin actualizar foto si hay error
-                }
+        $alumno->cedula = $request->cedula;
+        $alumno->nombres = $request->nombres;
+        $alumno->apellidos = $request->apellidos;
+        $alumno->correo = $request->correo;
+        $alumno->rol = $request->rol;
+
+        if ($request->hasFile('foto')) {
+            if ($alumno->foto && \Storage::disk('public')->exists($alumno->foto)) {
+                \Storage::disk('public')->delete($alumno->foto);
             }
-            
-            $alumno->save();
-            
-            // Ya no es necesario guardar el QR manualmente
-            // El accessor lo genera automáticamente con el nuevo código
 
-            $alumnos = Alumno::all();
-            return response()->json(['alumnos' => $alumnos, 'res' => 'ok']);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'alumnos' => Alumno::all(),
-                'res' => 'error',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            Log::error('Error al actualizar alumno: ' . $e->getMessage());
-            return response()->json([
-                'alumnos' => Alumno::all(),
-                'res' => 'error',
-                'msg' => 'Error al actualizar el estudiante'
-            ], 500);
+            $foto = $request->file('foto');
+            $nombreFoto = time() . '_' . $alumno->cedula . '.' . $foto->getClientOriginalExtension();
+            $ruta = $foto->storeAs('fotos_estudiantes', $nombreFoto, 'public');
+            $alumno->foto = $ruta;
         }
+
+        $alumno->save();
+
+        return response()->json(['alumnos' => Alumno::all(), 'res' => 'ok', 'msg' => 'Estudiante actualizado correctamente']);
     }
 
+    // Eliminar alumno
     public function destroy(Alumno $alumno)
     {
+        if ($alumno->foto && \Storage::disk('public')->exists($alumno->foto)) {
+            \Storage::disk('public')->delete($alumno->foto);
+        }
+
         $alumno->delete();
 
-        $alumnos = Alumno::all();
-        return response()->json(['alumnos' => $alumnos, 'res' => 'ok']);
+        return response()->json(['alumnos' => Alumno::all(), 'res' => 'ok']);
     }
 }
