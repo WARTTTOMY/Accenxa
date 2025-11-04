@@ -307,24 +307,6 @@ php artisan serve
 
 ---
 
-## 📸 Capturas de Pantalla
-
-<div align="center">
-
-### 🏠 Dashboard Principal
-<img src="docs/screenshots/dashboard.png" alt="Dashboard" width="800" />
-
-### 👥 Gestión de Alumnos
-<img src="docs/screenshots/alumnos.png" alt="Alumnos" width="800" />
-
-### 📱 Código QR del Estudiante
-<img src="docs/screenshots/qr-code.png" alt="QR Code" width="400" />
-
-### ✅ Registro de Asistencias
-<img src="docs/screenshots/asistencias.png" alt="Asistencias" width="800" />
-
-</div>
-
 <br>
 
 ---
@@ -423,34 +405,6 @@ php artisan test --filter AlumnoTest
 
 ---
 
-
-### Convenciones de Commits
-
-- `Add:` Nueva funcionalidad
-- `Fix:` Corrección de bugs
-- `Update:` Actualización de código existente
-- `Remove:` Eliminación de código
-- `Docs:` Cambios en documentación
-
-<br>
-
----
-
-## 🐛 Reporte de Bugs
-
-Si encuentras algún error, por favor:
-
-1. Verifica que no exista un [issue](https://github.com/TU_USUARIO/control-asistencias-qr/issues) similar
-2. Abre un nuevo issue con:
-   - 📝 Descripción detallada del problema
-   - 🔢 Pasos para reproducir el error
-   - 💻 Entorno (OS, PHP version, etc.)
-   - 📸 Capturas de pantalla (si aplica)
-
-<br>
-
----
-
 ## 📚 Recursos Adicionales
 
 - 📖 [Documentación de Laravel](https://laravel.com/docs)
@@ -471,9 +425,6 @@ Si encuentras algún error, por favor:
   <em>Estudiante ingenieria en software</em>
   <br><br>
   
-  [![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/TU_USUARIO)
-  [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/TU_PERFIL)
-  [![Email](https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:tuemail@ejemplo.com)
 </div>
 
 <br>
@@ -485,37 +436,12 @@ Si encuentras algún error, por favor:
 - Laravel Framework por su excelente documentación
 - SimpleSoftwareIO por la librería de QR codes
 - La comunidad de código abierto
+- A Manuel Castro (https://github.com/manuelcastro95) ya que el fue el clavo las bases de todo este proyecto permitiendo ahorrar tiempo y adecuarlo a mi
 
 <br>
 
----
 
-## 📊 Estadísticas del Proyecto
 
-<div align="center">
-
-![GitHub repo size](https://img.shields.io/github/repo-size/TU_USUARIO/control-asistencias-qr?style=for-the-badge)
-![GitHub stars](https://img.shields.io/github/stars/TU_USUARIO/control-asistencias-qr?style=for-the-badge)
-![GitHub forks](https://img.shields.io/github/forks/TU_USUARIO/control-asistencias-qr?style=for-the-badge)
-![GitHub issues](https://img.shields.io/github/issues/TU_USUARIO/control-asistencias-qr?style=for-the-badge)
-
-</div>
-
-<br>
-
----
-
-<div align="center">
-  
-### ⭐ Si este proyecto te fue útil, considera darle una estrella en GitHub
-
-<br>
-
-**Hecho con ❤️ para la comunidad educativa**
-
-<a href="#top">⬆️ Volver arriba</a>
-
-</div>
 
 <!-- BADGES -->
 [Laravel.com]: https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white
