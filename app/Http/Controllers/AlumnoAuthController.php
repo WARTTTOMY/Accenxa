@@ -50,7 +50,7 @@ class AlumnoAuthController extends Controller
     {
         $alumno = Alumno::findOrFail(Session::get('alumno_id'));
         $asistencias = Asistencia::where('alumno_id', $alumno->id)
-                                ->orderBy('created_at', 'desc')
+                                ->orderBy('fecha', 'desc')
                                 ->paginate(10);
         
         return view('alumno-auth.asistencias', compact('alumno', 'asistencias'));

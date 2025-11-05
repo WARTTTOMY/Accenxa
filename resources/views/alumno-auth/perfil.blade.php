@@ -44,18 +44,17 @@
             <!-- Columna QR -->
             <div class="col-md-5">
                 <div class="qr-container text-center">
-                    <div class="d-inline-block position-relative mb-4">
+                    <div class="d-inline-block mb-3">
                         <img src="data:image/svg+xml;base64,{{ $alumno->qr }}" 
                              alt="Código QR de {{ $alumno->full_name }}"
                              style="max-width: 250px;">
-                        <div class="position-absolute top-0 end-0 bg-white rounded-circle p-2 shadow-sm"
-                             style="transform: translate(25%, -25%);">
-                            <a href="{{ route('alumno.descargar-qr') }}" class="btn btn-light rounded-circle">
-                                <i class="fas fa-download text-primary"></i>
-                            </a>
-                        </div>
                     </div>
-                    <h4 class="fw-bold mb-3">
+                    <div class="mt-3">
+                        <a href="{{ route('alumno.descargar-qr') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-download me-2"></i>Descargar QR
+                        </a>
+                    </div>
+                    <h4 class="fw-bold mb-3 mt-4">
                         <i class="fas fa-qrcode me-2 text-primary"></i>Mi Código QR
                     </h4>
                     <p class="text-muted">Usa este código para registrar tu asistencia de forma rápida y segura</p>
