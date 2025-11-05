@@ -90,36 +90,27 @@ class AlumnoController extends Controller
                 'content_type' => $request->header('Content-Type')
             ]);
             
-            // Intentar obtener los datos del cuerpo de la solicitud
-            $contenido = $request->getContent();
+            // Obtener datos preferentemente como JSON (sin manipular comillas)
+            $datos = $request->isJson() ? $request->json()->all() : $request->all();
             
-            // Si hay datos en formato JSON en el cuerpo
-            if (!empty($contenido)) {
-                try {
-                    if (is_string($contenido)) {
-                        // Si el contenido parece ser una cadena JSON escapada, decodificarla primero
-                        if (strpos($contenido, '\\"') !== false) {
-                            $contenido = stripslashes($contenido);
-                        }
-                        $datos = json_decode($contenido, true);
-                        if (json_last_error() !== JSON_ERROR_NONE) {
-                            throw new \Exception('Error decodificando JSON: ' . json_last_error_msg());
-                        }
+            // Si el payload viene como { qr_data: "...json..." }, desanidar y decodificar
+            if (is_array($datos) && array_key_exists('qr_data', $datos)) {
+                $inner = $datos['qr_data'];
+                if (is_string($inner)) {
+                    $decoded = json_decode($inner, true);
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                        $datos = $decoded;
                     } else {
-                        $datos = $contenido;
+                        // Si no se pudo decodificar, mantener como string y seguir; buscarPorQR maneja string
+                        $datos = $inner;
                     }
-                } catch (\Exception $e) {
-                    \Log::error('Error procesando contenido:', [
-                        'error' => $e->getMessage(),
-                        'contenido' => $contenido
-                    ]);
-                    throw $e;
+                } elseif (is_array($inner)) {
+                    $datos = $inner;
+                } else {
+                    $datos = $inner; // dejar tal cual
                 }
-            } else {
-                // Si no hay datos en el cuerpo, intentar obtener del request
-                $datos = $request->all();
             }
-            
+
             \Log::info('Datos procesados:', $datos);
         
             $alumno = Alumno::buscarPorQR($datos);
@@ -127,7 +118,7 @@ class AlumnoController extends Controller
 
             if(!$alumno) {
                 \Log::error('Alumno no encontrado con los datos:', $datos);
-                return response()->json(['msg' => 'No se encontró el alumno', 'level' => 'error']);
+                return response()->json(['success' => false, 'msg' => 'No se encontró el alumno', 'level' => 'error']);
             }
 
             $validar = Asistencia::where('alumno_id', $alumno->id)
@@ -135,7 +126,7 @@ class AlumnoController extends Controller
                                 ->first();
 
             if($validar) {
-                return response()->json(['msg' => 'Ya registró asistencia', 'level' => 'warning']);
+                return response()->json(['success' => false, 'msg' => 'Ya registró asistencia', 'level' => 'warning']);
             }
 
             Asistencia::create([
@@ -151,7 +142,8 @@ class AlumnoController extends Controller
             ]);
             
             return response()->json([
-                'msg' => 'Asistencia registrada para ' . $alumno->full_name,
+                'success' => true,
+                'msg' => 'Bienvenid@ ' . $alumno->full_name,
                 'level' => 'success',
                 'alumno' => [
                     'nombre' => $alumno->full_name,
@@ -165,7 +157,7 @@ class AlumnoController extends Controller
                 'error' => $e->getMessage(),
                 'datos' => $request->all()
             ]);
-            return response()->json(['msg' => 'Error al procesar la asistencia', 'level' => 'error']);
+            return response()->json(['success' => false, 'msg' => 'Error al procesar la asistencia', 'level' => 'error']);
         }
     }
 
