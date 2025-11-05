@@ -121,64 +121,52 @@ class AlumnoController extends Controller
                 return response()->json(['success' => false, 'msg' => 'No se encontró el alumno', 'level' => 'error']);
             }
 
-            $registroHoy = Asistencia::where('alumno_id', $alumno->id)
+            // Buscar el último registro de hoy
+            $ultimoRegistroHoy = Asistencia::where('alumno_id', $alumno->id)
                                 ->where('fecha', $hoy)
+                                ->orderBy('created_at', 'desc')
                                 ->first();
 
             $ahora = Carbon::now()->format('H:i:s');
 
-            // Si ya existe registro hoy
-            if ($registroHoy) {
-                // Si no tiene salida, registrar salida
-                if (is_null($registroHoy->hora_salida)) {
-                    $registroHoy->hora_salida = $ahora;
-                    $registroHoy->save();
-
-                    \Log::info('Salida registrada:', [
-                        'alumno_id' => $alumno->id,
-                        'fecha' => $hoy,
-                        'hora_salida' => $ahora
-                    ]);
-
-                    return response()->json([
-                        'success' => true,
-                        'msg' => 'Salida registrada, hasta luego ' . $alumno->full_name,
-                        'level' => 'success',
-                        'alumno' => [
-                            'nombre' => $alumno->full_name,
-                            'rol' => $alumno->rol,
-                            'cedula' => $alumno->cedula
-                        ]
-                    ]);
+            // Determinar el tipo del nuevo registro
+            if (!$ultimoRegistroHoy) {
+                // No hay registros hoy, crear entrada
+                $tipo = 'entrada';
+                $mensaje = 'Bienvenid@ ' . $alumno->full_name;
+            } else {
+                // Ya hay registros hoy, alternar tipo
+                if ($ultimoRegistroHoy->tipo === 'entrada') {
+                    $tipo = 'salida';
+                    $mensaje = 'Salida registrada, hasta luego ' . $alumno->full_name;
+                } else {
+                    $tipo = 'entrada';
+                    $mensaje = 'Bienvenid@ de nuevo ' . $alumno->full_name;
                 }
-
-                // Ya tiene entrada y salida
-                return response()->json([
-                    'success' => false,
-                    'msg' => 'Ya registró entrada y salida hoy',
-                    'level' => 'warning'
-                ]);
             }
 
-            // No existe registro hoy, registrar entrada
+            // Crear el nuevo registro
             Asistencia::create([
                 'alumno_id' => $alumno->id,
                 'fecha' => $hoy,
-                'hora_entrada' => $ahora,
+                'tipo' => $tipo,
+                'hora' => $ahora,
             ]);
 
-            \Log::info('Entrada registrada para alumno:', [
+            \Log::info('Asistencia registrada:', [
                 'alumno_id' => $alumno->id,
                 'cedula' => $alumno->cedula,
                 'nombre' => $alumno->full_name,
                 'fecha' => $hoy,
-                'hora_entrada' => $ahora
+                'tipo' => $tipo,
+                'hora' => $ahora
             ]);
 
             return response()->json([
                 'success' => true,
-                'msg' => 'Bienvenid@ ' . $alumno->full_name,
+                'msg' => $mensaje,
                 'level' => 'success',
+                'tipo' => $tipo,
                 'alumno' => [
                     'nombre' => $alumno->full_name,
                     'rol' => $alumno->rol,

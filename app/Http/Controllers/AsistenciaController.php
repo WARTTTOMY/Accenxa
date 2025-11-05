@@ -13,6 +13,7 @@ class AsistenciaController extends Controller
     {
         $asistencias = Asistencia::with('alumno')
             ->orderBy('fecha', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($a) {
                 $alumno = $a->alumno; // puede ser null si el alumno fue eliminado
@@ -20,8 +21,8 @@ class AsistenciaController extends Controller
                     'codigo' => $alumno?->codigo ?? '(sin código)',
                     'full_name' => $alumno?->full_name ?? '(Alumno eliminado)',
                     'fecha' => date('Y-m-d', strtotime($a->fecha)),
-                    'hora_entrada' => $a->hora_entrada ? date('H:i', strtotime($a->hora_entrada)) : null,
-                    'hora_salida' => $a->hora_salida ? date('H:i', strtotime($a->hora_salida)) : null,
+                    'tipo' => ucfirst($a->tipo),
+                    'hora' => $a->hora ? date('H:i', strtotime($a->hora)) : null,
                 ];
             });
 
