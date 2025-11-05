@@ -18,6 +18,7 @@ class AsistenciaController extends Controller
             ->map(function ($a) {
                 $alumno = $a->alumno; // puede ser null si el alumno fue eliminado
                 return  [
+                    'cedula' => $alumno?->cedula ?? '(sin cédula)',
                     'codigo' => $alumno?->codigo ?? '(sin código)',
                     'full_name' => $alumno?->full_name ?? '(Alumno eliminado)',
                     'fecha' => date('Y-m-d', strtotime($a->fecha)),

@@ -29,8 +29,8 @@
                                 <label for="formGroupExampleInput" class="form-label">Alumno</label>
                                 <select class="select2 form-control" style="width: 100%" id="alumno">
                                     <option></option>
-                                    @foreach ($alumnos as $alumno)
-                                        <option value="{{$alumno->codigo}}"><span class="hidden">{{$alumno->codigo}}</span> - {{$alumno->full_name}}</option>
+                                    @foreach ($alumnos as $item)
+                                        <option value="{{$item->cedula}}">{{$item->cedula}} - {{$item->full_name}}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -47,7 +47,7 @@
                         <table id="tableAsistencias" class="table table-striped display" style="width:100%">
                             <thead class="thead-light">
                                 <tr>
-                                    <th class="text-center">Codigo</th>
+                                    <th class="text-center">Cédula</th>
                                     <th class="text-center">Nombres y Apellidos</th>
                                     <th class="text-center">Fecha</th>
                                     <th class="text-center">Tipo</th>
@@ -103,7 +103,7 @@
                 const fecha = new Date(asistencia.fecha).toLocaleDateString('es-ES');
                 
                 table.row.add([
-                    asistencia.codigo,
+                    asistencia.cedula,
                     asistencia.full_name,
                     fecha,
                     asistencia.tipo,
@@ -131,18 +131,46 @@
         const buscar = () => {
             let filter = asistencias;
 
+            console.log('Valor seleccionado del alumno:', alumno.value);
+            console.log('Total registros antes de filtrar:', filter.length);
+
+            // Filtro por rango de fechas
             if(f_inicio.value != '' && f_fin.value != '' ){
                 filter = filter.filter(asistencia => {
-                    const fecha = new Date(asistencia.fecha);
-                    const inicio = new Date(f_inicio.value);
-                    const fin = new Date(f_fin.value);
-                    return fecha >= inicio && fecha <= fin;
+                    // Normalizar fechas a formato YYYY-MM-DD para comparación
+                    const fechaAsistencia = asistencia.fecha; // Ya viene en formato YYYY-MM-DD desde el servidor
+                    const inicio = f_inicio.value;
+                    const fin = f_fin.value;
+                    return fechaAsistencia >= inicio && fechaAsistencia <= fin;
                 });
-            }
-            if(alumno.value != ''){
-                filter = filter.filter(asistencia => asistencia.codigo == alumno.value);
+                console.log('Después de filtro por fecha:', filter.length);
+            } else if(f_inicio.value != '') {
+                // Si solo hay fecha inicio, filtrar desde esa fecha
+                filter = filter.filter(asistencia => asistencia.fecha >= f_inicio.value);
+                console.log('Después de filtro por fecha inicio:', filter.length);
+            } else if(f_fin.value != '') {
+                // Si solo hay fecha fin, filtrar hasta esa fecha
+                filter = filter.filter(asistencia => asistencia.fecha <= f_fin.value);
+                console.log('Después de filtro por fecha fin:', filter.length);
             }
 
+            // Filtro por cédula de alumno
+            if(alumno.value != ''){
+                const cedulaSeleccionada = alumno.value.trim();
+                console.log('Filtrando por cédula:', cedulaSeleccionada);
+                
+                filter = filter.filter(asistencia => {
+                    const cedulaAsistencia = String(asistencia.cedula).trim();
+                    const match = cedulaAsistencia === cedulaSeleccionada;
+                    if(match) {
+                        console.log('Match encontrado:', asistencia);
+                    }
+                    return match;
+                });
+                console.log('Después de filtro por alumno:', filter.length);
+            }
+
+            console.log('Resultados finales:', filter);
             loadTable(filter);
         }
     </script> 
