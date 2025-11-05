@@ -13,6 +13,8 @@
                         <p class="text-muted mb-0 mt-1">
                             <i class="fas fa-user me-1"></i>{{ $alumno->full_name }}
                         </p>
+                    </div>
+                </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table mb-0">
@@ -22,13 +24,10 @@
                                         <i class="fas fa-calendar-alt me-2"></i>Fecha
                                     </th>
                                     <th>
-                                        <i class="fas fa-sign-in-alt me-2"></i>Entrada
+                                        <i class="fas fa-clock me-2"></i>Hora
                                     </th>
                                     <th>
-                                        <i class="fas fa-sign-out-alt me-2"></i>Salida
-                                    </th>
-                                    <th>
-                                        <i class="fas fa-info-circle me-2"></i>Estado
+                                        <i class="fas fa-sign-in-alt me-2"></i>Tipo
                                     </th>
                                 </tr>
                             </thead>
@@ -39,24 +38,18 @@
                                             {{ \Carbon\Carbon::parse($asistencia->fecha)->format('d/m/Y') }}
                                         </td>
                                         <td>
-                                            <span class="fw-500">{{ $asistencia->hora_entrada ? \Carbon\Carbon::parse($asistencia->hora_entrada)->format('H:i') : '-' }}</span>
+                                            <span class="fw-500">{{ $asistencia->hora ? \Carbon\Carbon::parse($asistencia->hora)->format('H:i') : '-' }}</span>
                                         </td>
                                         <td>
-                                            <span class="fw-500">{{ $asistencia->hora_salida ? \Carbon\Carbon::parse($asistencia->hora_salida)->format('H:i') : '-' }}</span>
-                                        </td>
-                                        <td>
-                                            @php
-                                                $completa = $asistencia->hora_entrada && $asistencia->hora_salida;
-                                            @endphp
-                                            <span class="badge {{ $completa ? 'bg-success' : 'bg-warning text-dark' }}">
-                                                <i class="fas fa-circle me-1" style="font-size: 8px;"></i>
-                                                {{ $completa ? 'Completa' : 'Falta salida' }}
+                                            <span class="badge {{ $asistencia->tipo === 'entrada' ? 'bg-success' : 'bg-danger' }} px-3">
+                                                <i class="fas {{ $asistencia->tipo === 'entrada' ? 'fa-sign-in-alt' : 'fa-sign-out-alt' }} me-1"></i>
+                                                {{ ucfirst($asistencia->tipo) }}
                                             </span>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center py-5">
+                                        <td colspan="3" class="text-center py-5">
                                             <div class="text-muted">
                                                 <i class="fas fa-calendar-times fa-3x mb-3"></i>
                                                 <p class="mb-0">No hay registros de asistencia disponibles.</p>

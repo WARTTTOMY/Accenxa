@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Asistencia extends Model
 {
     use HasFactory;
-    protected $fillable = ['alumno_id', 'fecha', 'hora_entrada', 'hora_salida'];
+    protected $fillable = ['alumno_id', 'fecha', 'tipo', 'hora'];
 
     public function alumno(){
         return $this->belongsTo(Alumno::class, 'alumno_id');

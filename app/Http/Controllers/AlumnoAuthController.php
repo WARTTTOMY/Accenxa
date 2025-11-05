@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Response;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AlumnoAuthController extends Controller
 {
@@ -60,16 +61,13 @@ class AlumnoAuthController extends Controller
     {
         $alumno = Alumno::findOrFail(Session::get('alumno_id'));
         
-        // Generar QR code con el número de cédula
-        $qrCode = QrCode::size(300)
-                       ->errorCorrection('H')
-                       ->margin(2)
-                       ->generate($alumno->cedula);
-
-        // Crear respuesta con el QR code como SVG
-        return response($qrCode)
-               ->header('Content-Type', 'image/svg+xml')
-               ->header('Content-Disposition', 'attachment; filename="qr-code.svg"');
+        // Generar PDF con el QR y datos del alumno
+        $pdf = Pdf::loadView('alumno-auth.qr-pdf', compact('alumno'))
+                  ->setPaper('a4', 'portrait')
+                  ->setOption('isHtml5ParserEnabled', true)
+                  ->setOption('isRemoteEnabled', true);
+        
+        return $pdf->download('mi-codigo-qr-' . $alumno->cedula . '.pdf');
     }
 
     public function logout()
