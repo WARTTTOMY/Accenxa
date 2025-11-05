@@ -23,7 +23,7 @@
                             
                             <!-- Contenedor del scanner -->
                             <div class="scanner-area" style="width: 100%; max-width: 300px; margin: 0 auto;">
-                                <div id="reader" class="border rounded" style="width: 100%; aspect: ratio 2px;"></div>
+                                <div id="reader" class="border rounded" style="width: 100%; aspect-ratio: 1;"></div>
                             </div>
 
                             <!-- Mensajes de estado -->
@@ -142,26 +142,72 @@
                 scanStatus.classList.add('alert-success');
                 scanStatus.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Procesando asistencia...';
                 
-                // Enviar la solicitud al servidor
-                fetch('/asistencia/registrar', {
+                // Preparar payload: si decodedText es JSON, enviarlo ya parseado; si no, enviar como string
+                let payload = {};
+                try {
+                    payload.qr_data = JSON.parse(decodedText);
+                } catch (e) {
+                    payload.qr_data = decodedText;
+                }
+
+                // Enviar la solicitud al servidor (ruta pública para registrar asistencia)
+                fetch('/alumno/registrar', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
-                    body: JSON.stringify({ qr_data: decodedText })
+                    body: JSON.stringify(payload)
                 })
-                .then(response => response.json())
+                .then(async response => {
+                    // Guardar el texto y tipo para manejar respuestas inesperadas (HTML)
+                    const text = await response.text();
+                    const contentType = response.headers.get('content-type') || '';
+
+                    if (!contentType.includes('application/json')) {
+                        // El servidor devolvió HTML o redirección (ej. redirigir a login) -> fallo por motivos de auth u otro
+                        throw new Error('Respuesta inesperada del servidor: ' + (text.substring(0, 200)));
+                    }
+
+                    let data;
+                    try {
+                        data = JSON.parse(text);
+                    } catch (err) {
+                        throw new Error('JSON inválido recibido desde el servidor');
+                    }
+
+                    return data;
+                })
                 .then(data => {
-                    if (data.success) {
-                        scanStatus.innerHTML = `<i class="fas fa-check-circle me-2"></i>${data.message}`;
-                        // Reiniciar el scanner después de 3 segundos
+                    const msg = data.message || data.msg || '';
+                    // Limpiar clases previas de alerta
+                    scanStatus.classList.remove('alert-success', 'alert-danger', 'alert-warning');
+
+                    if (data.level === 'success') {
+                        scanStatus.classList.add('alert-success');
+                        scanStatus.innerHTML = `<i class="fas fa-check-circle me-2"></i>${msg || 'Asistencia registrada'}`;
+                        setTimeout(() => {
+                            scanStatus.classList.add('d-none');
+                            startScanner();
+                        }, 3000);
+                    } else if (data.level === 'warning') {
+                        scanStatus.classList.add('alert-warning');
+                        scanStatus.classList.remove('d-none');
+                        scanStatus.innerHTML = `<i class=\"fas fa-exclamation-triangle me-2\"></i>${msg || 'Ya registró asistencia'}`;
+                        setTimeout(() => {
+                            scanStatus.classList.add('d-none');
+                            startScanner();
+                        }, 2500);
+                    } else if (data.success) {
+                        // Fallback legacy: tratar como éxito si viene success=true sin level
+                        scanStatus.classList.add('alert-success');
+                        scanStatus.innerHTML = `<i class="fas fa-check-circle me-2"></i>${msg || 'Asistencia registrada'}`;
                         setTimeout(() => {
                             scanStatus.classList.add('d-none');
                             startScanner();
                         }, 3000);
                     } else {
-                        throw new Error(data.message);
+                        throw new Error(msg || 'No se pudo registrar la asistencia');
                     }
                 })
                 .catch(error => {

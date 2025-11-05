@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AlumnoAuthController;
+use App\Http\Controllers\AlumnoController;
 use Illuminate\Support\Facades\Route;
 
 // Rutas públicas
@@ -25,3 +26,7 @@ Route::middleware(['alumno.auth'])->group(function () {
     Route::post('/alumno/logout', [AlumnoAuthController::class, 'logout'])
         ->name('alumno.logout');
 });
+
+// Endpoint público para registrar asistencia vía QR desde la página de login
+// Se deja fuera del middleware para permitir lecturas desde usuarios no autenticados
+Route::post('/alumno/registrar', [AlumnoController::class, 'save_record'])->name('alumno.registrar');
