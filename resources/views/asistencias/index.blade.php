@@ -50,6 +50,8 @@
                                     <th class="text-center">Codigo</th>
                                     <th class="text-center">Nombres y Apellidos</th>
                                     <th class="text-center">Fecha</th>
+                                    <th class="text-center">Entrada</th>
+                                    <th class="text-center">Salida</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -104,6 +106,8 @@
                     asistencia.codigo,
                     asistencia.full_name,
                     fecha,
+                    asistencia.hora_entrada ? asistencia.hora_entrada : '-',
+                    asistencia.hora_salida ? asistencia.hora_salida : '-',
                 ]).draw(false);
             });
         }

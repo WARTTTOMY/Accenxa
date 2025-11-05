@@ -13,11 +13,6 @@
                         <p class="text-muted mb-0 mt-1">
                             <i class="fas fa-user me-1"></i>{{ $alumno->full_name }}
                         </p>
-                    </div>
-                    <a href="{{ route('alumno.perfil') }}" class="btn btn-outline-primary">
-                        <i class="fas fa-arrow-left me-2"></i>Volver al Perfil
-                    </a>
-                </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table mb-0">
@@ -27,10 +22,10 @@
                                         <i class="fas fa-calendar-alt me-2"></i>Fecha
                                     </th>
                                     <th>
-                                        <i class="fas fa-clock me-2"></i>Hora
+                                        <i class="fas fa-sign-in-alt me-2"></i>Entrada
                                     </th>
                                     <th>
-                                        <i class="fas fa-sign-in-alt me-2"></i>Tipo
+                                        <i class="fas fa-sign-out-alt me-2"></i>Salida
                                     </th>
                                     <th>
                                         <i class="fas fa-info-circle me-2"></i>Estado
@@ -41,47 +36,21 @@
                                 @forelse ($asistencias as $asistencia)
                                     <tr>
                                         <td class="px-4">
-                                            {{ $asistencia->created_at->format('d/m/Y') }}
+                                            {{ \Carbon\Carbon::parse($asistencia->fecha)->format('d/m/Y') }}
                                         </td>
                                         <td>
-                                            <span class="fw-500">{{ $asistencia->created_at->format('h:i A') }}</span>
+                                            <span class="fw-500">{{ $asistencia->hora_entrada ? \Carbon\Carbon::parse($asistencia->hora_entrada)->format('H:i') : '-' }}</span>
                                         </td>
                                         <td>
-                                            <span class="badge {{ $asistencia->tipo === 'entrada' ? 'bg-success' : 'bg-danger' }} px-3">
-                                                <i class="fas {{ $asistencia->tipo === 'entrada' ? 'fa-sign-in-alt' : 'fa-sign-out-alt' }} me-1"></i>
-                                                {{ ucfirst($asistencia->tipo) }}
-                                            </span>
+                                            <span class="fw-500">{{ $asistencia->hora_salida ? \Carbon\Carbon::parse($asistencia->hora_salida)->format('H:i') : '-' }}</span>
                                         </td>
                                         <td>
                                             @php
-                                                $hora = (int)$asistencia->created_at->format('H');
-                                                $estado = '';
-                                                $estadoClass = '';
-                                                
-                                                if($asistencia->tipo === 'entrada') {
-                                                    if($hora <= 8) {
-                                                        $estado = 'A tiempo';
-                                                        $estadoClass = 'success';
-                                                    } elseif($hora <= 9) {
-                                                        $estado = 'Tardanza';
-                                                        $estadoClass = 'warning';
-                                                    } else {
-                                                        $estado = 'Muy tarde';
-                                                        $estadoClass = 'danger';
-                                                    }
-                                                } else {
-                                                    if($hora >= 17) {
-                                                        $estado = 'Completado';
-                                                        $estadoClass = 'success';
-                                                    } else {
-                                                        $estado = 'Salida temprana';
-                                                        $estadoClass = 'warning';
-                                                    }
-                                                }
+                                                $completa = $asistencia->hora_entrada && $asistencia->hora_salida;
                                             @endphp
-                                            <span class="text-{{ $estadoClass }}">
+                                            <span class="badge {{ $completa ? 'bg-success' : 'bg-warning text-dark' }}">
                                                 <i class="fas fa-circle me-1" style="font-size: 8px;"></i>
-                                                {{ $estado }}
+                                                {{ $completa ? 'Completa' : 'Falta salida' }}
                                             </span>
                                         </td>
                                     </tr>

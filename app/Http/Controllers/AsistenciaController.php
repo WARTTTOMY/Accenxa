@@ -11,13 +11,19 @@ class AsistenciaController extends Controller
     
     public function index()
     {
-        $asistencias = Asistencia::orderBy('fecha', 'desc')->get()->map(function ($a) {
-            return  [
-                'codigo' => $a->alumno->codigo,
-                'full_name' => $a->alumno->full_name,
-                'fecha' => date('Y-m-d', strtotime($a->fecha)),
-            ];
-        });
+        $asistencias = Asistencia::with('alumno')
+            ->orderBy('fecha', 'desc')
+            ->get()
+            ->map(function ($a) {
+                $alumno = $a->alumno; // puede ser null si el alumno fue eliminado
+                return  [
+                    'codigo' => $alumno?->codigo ?? '(sin código)',
+                    'full_name' => $alumno?->full_name ?? '(Alumno eliminado)',
+                    'fecha' => date('Y-m-d', strtotime($a->fecha)),
+                    'hora_entrada' => $a->hora_entrada ? date('H:i', strtotime($a->hora_entrada)) : null,
+                    'hora_salida' => $a->hora_salida ? date('H:i', strtotime($a->hora_salida)) : null,
+                ];
+            });
 
         $alumnos = Alumno::all();
         return view('asistencias.index',compact('asistencias','alumnos'));

@@ -121,26 +121,60 @@ class AlumnoController extends Controller
                 return response()->json(['success' => false, 'msg' => 'No se encontró el alumno', 'level' => 'error']);
             }
 
-            $validar = Asistencia::where('alumno_id', $alumno->id)
+            $registroHoy = Asistencia::where('alumno_id', $alumno->id)
                                 ->where('fecha', $hoy)
                                 ->first();
 
-            if($validar) {
-                return response()->json(['success' => false, 'msg' => 'Ya registró asistencia', 'level' => 'warning']);
+            $ahora = Carbon::now()->format('H:i:s');
+
+            // Si ya existe registro hoy
+            if ($registroHoy) {
+                // Si no tiene salida, registrar salida
+                if (is_null($registroHoy->hora_salida)) {
+                    $registroHoy->hora_salida = $ahora;
+                    $registroHoy->save();
+
+                    \Log::info('Salida registrada:', [
+                        'alumno_id' => $alumno->id,
+                        'fecha' => $hoy,
+                        'hora_salida' => $ahora
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'msg' => 'Salida registrada, hasta luego ' . $alumno->full_name,
+                        'level' => 'success',
+                        'alumno' => [
+                            'nombre' => $alumno->full_name,
+                            'rol' => $alumno->rol,
+                            'cedula' => $alumno->cedula
+                        ]
+                    ]);
+                }
+
+                // Ya tiene entrada y salida
+                return response()->json([
+                    'success' => false,
+                    'msg' => 'Ya registró entrada y salida hoy',
+                    'level' => 'warning'
+                ]);
             }
 
+            // No existe registro hoy, registrar entrada
             Asistencia::create([
                 'alumno_id' => $alumno->id,
                 'fecha' => $hoy,
+                'hora_entrada' => $ahora,
             ]);
-            
-            \Log::info('Asistencia registrada para alumno:', [
+
+            \Log::info('Entrada registrada para alumno:', [
                 'alumno_id' => $alumno->id,
                 'cedula' => $alumno->cedula,
                 'nombre' => $alumno->full_name,
-                'fecha' => $hoy
+                'fecha' => $hoy,
+                'hora_entrada' => $ahora
             ]);
-            
+
             return response()->json([
                 'success' => true,
                 'msg' => 'Bienvenid@ ' . $alumno->full_name,
